@@ -1,3 +1,19 @@
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class hjacobs_sprites extends PApplet {
+
 //import java.io.File;
 int count = 1;
 float x, y;
@@ -11,8 +27,8 @@ Animation[] animationArray;
 
 // ================================== //
 
-void setup() {
-  size(1000, 1000, P3D);
+public void setup() {
+  
 
   java.io.File spritesFolder = new java.io.File(dataPath("Sprites"));           // data/Sprites
   String[] files = spritesFolder.list();                                        // All files (including invisibles).
@@ -76,7 +92,7 @@ void setup() {
 
 // ================================== //
 
-void draw() {
+public void draw() {
   background(255);
 
   for(int i = 0; i < 6; i++) {
@@ -97,7 +113,7 @@ class Animation {
   float x, y;
   int count = 0;
   int d = 72;                       // Sprite .png is 72 X 72.
-  float vx = random(-.5, .5);
+  float vx = random(-.5f, .5f);
   float vy = vx * random(-2, 2);
 
   Animation(String name, int index, float x, float y) {
@@ -107,7 +123,7 @@ class Animation {
     this.y = y;
   }
 
-  void show() {
+  public void show() {
 
     count = (imageList.get(index + count).contains(name)) ? count : 0;
     image(sprites[index + count + 1], x, y);                                    // sprites[], imageList() off by 1.
@@ -132,7 +148,7 @@ class Animation {
   //  y = (y <= 0) ? 2 * d : (y >=height) ? height - (2 * d) : y;
   //}
 
-  void move() {
+  public void move() {
    x += vx;
    y += vy;
    // Rebound.
@@ -140,4 +156,14 @@ class Animation {
    vy = (y > height - d || y < 0 + d) ? -vy : vy;
   }
 
+}
+  public void settings() {  size(1000, 1000, P3D); }
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "hjacobs_sprites" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
 }
