@@ -86,7 +86,6 @@ void draw() {
     //println(animationArray[i].index);
   }
   // println(frameRate + " fps");
-  //exit();
 }
 
 /* ======= Class ======= */
@@ -96,8 +95,9 @@ class Animation {
   int index;
   float x, y;
   int count = 0;
-  int d = 72;                       // Sprite .png is 72 X 72.
-  float vx = random(-.5, .5);
+  int d = 0;                                                                    // Sprite .png is 72 X 72, but lots of background padding.
+  float vRange = 5;
+  float vx = random(-vRange, vRange);
   float vy = vx * random(-2, 2);
 
   Animation(String name, int index, float x, float y) {
@@ -110,34 +110,27 @@ class Animation {
   void show() {
 
     count = (imageList.get(index + count).contains(name)) ? count : 0;
-    image(sprites[index + count + 1], x, y);                                    // sprites[], imageList() off by 1.
+    pushMatrix();
+    scale(facing, 1);
+    image(sprites[index + count + 1], x * facing, y);                           // sprites[], imageList() off by 1.
+    popMatrix();
     //println(name + "  " + index + "  " + count + "  " + imageList.get(index + count));
     //println(index + count + 1);
     count++ ;
     if(index + count + 1 >= sprites.length) count = -1;                         // Keep sprites in bounds.
   }
 
-  //void reInit() {
-  //  vx = random(-.5, .5);
-  //  vy = vx * random(-2, 2);
-  //}
-
-  //void restrain() {
-  //  // Multiple approaches are needed for boundary and out-of-bounds situations.
-  //  if (x !=x || y != y) reInit();  // Just in case NaN results (It's happened in testing).
-  //  x = constrain(x, 0, width);
-  //  y = constrain(y, 0, height);
-  //  // Add a little padding for wiggle room.
-  //  x = (x <= 0) ? 2 * d : (x >= width) ? width - (2 * d) : x;
-  //  y = (y <= 0) ? 2 * d : (y >=height) ? height - (2 * d) : y;
-  //}
-
+  int facing;
   void move() {
    x += vx;
    y += vy;
+
    // Rebound.
    vx = (x > width - d || x < 0 + d) ? -vx : vx;
    vy = (y > height - d || y < 0 + d) ? -vy : vy;
+
+   facing = (vx < 0) ? -1 : 1;                                                  // Orient image w/travel direction.
+   if (x <= 0 || x >= width) facing *= -1;                                      // Rebound orientation.
   }
 
 }
