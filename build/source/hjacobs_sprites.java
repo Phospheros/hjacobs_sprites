@@ -25,7 +25,7 @@ IntList figuresIndex;
 Animation animation = new Animation(name, index, x, y);
 Animation[] animationArray;
 
-// ================================== //
+// ================= Setup ================= //
 
 public void setup() {
   
@@ -85,24 +85,28 @@ public void setup() {
   background(255);
   //println(files.length);
   //println(imageList.size());
+  // println(animationArray.length);
   //println(figuresList);
   //println(figuresUnique);
   //println(figuresIndex);
 }
 
-// ================================== //
+// ================= Draw ================= //
+
 
 public void draw() {
   background(255);
 
-  for(int i = 0; i < 6; i++) {
+  for(int i = 0; i < animationArray.length; i++) {
     animationArray[i].show();
     animationArray[i].move();
+    animationArray[i].scatter();
+
+
     //println(animationArray[i].name);
     //println(animationArray[i].index);
   }
   // println(frameRate + " fps");
-  //exit();
 }
 
 /* ======= Class ======= */
@@ -112,9 +116,14 @@ class Animation {
   int index;
   float x, y;
   int count = 0;
-  int d = 72;                       // Sprite .png is 72 X 72.
-  float vx = random(-.5f, .5f);
+  int d = 0;                                                                    // Sprite .png is 72 X 72, but lots of background padding.
+  float vRange = 5;
+  float vx = random(-vRange, vRange);
   float vy = vx * random(-2, 2);
+  int facing;
+  float field, dx, dy, lerpVal, lerpX, lerpY;
+  float ease = 50;
+  float r = 300;
 
   Animation(String name, int index, float x, float y) {
     this.name = name;
@@ -126,37 +135,52 @@ class Animation {
   public void show() {
 
     count = (imageList.get(index + count).contains(name)) ? count : 0;
-    image(sprites[index + count + 1], x, y);                                    // sprites[], imageList() off by 1.
+    pushMatrix();
+    scale(facing, 1);
+    image(sprites[index + count + 1], x * facing, y);                           // sprites[], imageList() off by 1.
+    popMatrix();
     //println(name + "  " + index + "  " + count + "  " + imageList.get(index + count));
     //println(index + count + 1);
     count++ ;
     if(index + count + 1 >= sprites.length) count = -1;                         // Keep sprites in bounds.
   }
 
-  //void reInit() {
-  //  vx = random(-.5, .5);
-  //  vy = vx * random(-2, 2);
-  //}
-
-  //void restrain() {
-  //  // Multiple approaches are needed for boundary and out-of-bounds situations.
-  //  if (x !=x || y != y) reInit();  // Just in case NaN results (It's happened in testing).
-  //  x = constrain(x, 0, width);
-  //  y = constrain(y, 0, height);
-  //  // Add a little padding for wiggle room.
-  //  x = (x <= 0) ? 2 * d : (x >= width) ? width - (2 * d) : x;
-  //  y = (y <= 0) ? 2 * d : (y >=height) ? height - (2 * d) : y;
-  //}
-
   public void move() {
    x += vx;
    y += vy;
+
    // Rebound.
    vx = (x > width - d || x < 0 + d) ? -vx : vx;
    vy = (y > height - d || y < 0 + d) ? -vy : vy;
+
+   facing = (vx < 0) ? -1 : 1;                                                  // Orient image w/travel direction.
+   if (x <= 0 || x >= width) facing *= -1;                                      // Rebound orientation.
+  }
+
+  public void scatter() {
+    field = dist(mouseX, mouseY, x, y);                                         // Locus / particle distance.
+    lerpVal = r / field;                                                        // Field radius / distance.
+    lerpX = lerp(mouseX, x, lerpVal);                                           // Fractional distance.
+    lerpY = lerp(mouseY, y, lerpVal);
+
+    if (field <= r && mousePressed) {
+      stroke(0, 50);
+      line(x, y, lerpX, lerpY);                                                 // Trajectory display.
+      dx = lerpX - x;                                                           // Velocity as factor of distance.
+      dy = lerpY - y;
+      x += dx/ease;                                                             // Apply velocity.
+      y += dy/ease;
+      // animationArray[i].restrain();
+    }
   }
 
 }
+
+/*  =========== Notes =========== /
+
+Projector resolution = 1920 X 1080, throw ~= 132" X 73" @ ~110" distance.
+
+*/
   public void settings() {  size(1000, 1000, P3D); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "hjacobs_sprites" };

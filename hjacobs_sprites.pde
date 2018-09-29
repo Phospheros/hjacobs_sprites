@@ -9,7 +9,7 @@ IntList figuresIndex;
 Animation animation = new Animation(name, index, x, y);
 Animation[] animationArray;
 
-// ================================== //
+// ================= Setup ================= //
 
 void setup() {
   size(1000, 1000, P3D);
@@ -69,19 +69,24 @@ void setup() {
   background(255);
   //println(files.length);
   //println(imageList.size());
+  // println(animationArray.length);
   //println(figuresList);
   //println(figuresUnique);
   //println(figuresIndex);
 }
 
-// ================================== //
+// ================= Draw ================= //
+
 
 void draw() {
   background(255);
 
-  for(int i = 0; i < 6; i++) {
+  for(int i = 0; i < animationArray.length; i++) {
     animationArray[i].show();
     animationArray[i].move();
+    animationArray[i].scatter();
+
+
     //println(animationArray[i].name);
     //println(animationArray[i].index);
   }
@@ -99,6 +104,10 @@ class Animation {
   float vRange = 5;
   float vx = random(-vRange, vRange);
   float vy = vx * random(-2, 2);
+  int facing;
+  float field, dx, dy, lerpVal, lerpX, lerpY;
+  float ease = 50;
+  float r = 300;
 
   Animation(String name, int index, float x, float y) {
     this.name = name;
@@ -120,7 +129,6 @@ class Animation {
     if(index + count + 1 >= sprites.length) count = -1;                         // Keep sprites in bounds.
   }
 
-  int facing;
   void move() {
    x += vx;
    y += vy;
@@ -133,4 +141,27 @@ class Animation {
    if (x <= 0 || x >= width) facing *= -1;                                      // Rebound orientation.
   }
 
+  void scatter() {
+    field = dist(mouseX, mouseY, x, y);                                         // Locus / particle distance.
+    lerpVal = r / field;                                                        // Field radius / distance.
+    lerpX = lerp(mouseX, x, lerpVal);                                           // Fractional distance.
+    lerpY = lerp(mouseY, y, lerpVal);
+
+    if (field <= r && mousePressed) {
+      stroke(0, 50);
+      line(x, y, lerpX, lerpY);                                                 // Trajectory display.
+      dx = lerpX - x;                                                           // Velocity as factor of distance.
+      dy = lerpY - y;
+      x += dx/ease;                                                             // Apply velocity.
+      y += dy/ease;
+      // animationArray[i].restrain();
+    }
+  }
+
 }
+
+/*  =========== Notes =========== /
+
+Projector resolution = 1920 X 1080, throw ~= 132" X 73" @ ~110" distance.
+
+*/
