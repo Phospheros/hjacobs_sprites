@@ -89,8 +89,9 @@ void draw() {
 
     //println(animationArray[i].name);
     //println(animationArray[i].index);
+    //println(animationArray[i].inc + "  " + animationArray[i].count);
   }
-  // println(frameRate + " fps");
+   //println(int(frameRate) + " fps");
 }
 
 /* ======= Class ======= */
@@ -99,15 +100,15 @@ class Animation {
   String name;
   int index;
   float x, y;
-  int count = 0;
+  int count;
   int d = 0;                                                                    // Sprite .png is 72 X 72, but lots of background padding.
-  float vRange = 5;
+  float vRange = 5;                                                             // Velocity & heading variables.
   float vx = random(-vRange, vRange);
   float vy = vx * random(-2, 2);
   int facing;
-  float field, dx, dy, lerpVal, lerpX, lerpY;
-  float ease = 50;
-  float r = 300;
+  float field, dx, dy, lerpVal, lerpX, lerpY;                                   // Scatter force field variables.
+  float ease = 30;                                                              // Force field. Lower vals. are stronger.
+  float r = 300;                                                                // Radius of force field.
 
   Animation(String name, int index, float x, float y) {
     this.name = name;
@@ -115,6 +116,10 @@ class Animation {
     this.x = x;
     this.y = y;
   }
+
+int rate = ceil(abs(vx) + abs(vy)) * -1 + floor(abs(vx) + abs(vy));  // Dial this in.
+//int rate = 5;
+int inc = 0;
 
   void show() {
 
@@ -125,16 +130,18 @@ class Animation {
     popMatrix();
     //println(name + "  " + index + "  " + count + "  " + imageList.get(index + count));
     //println(index + count + 1);
-    count++ ;
-    if(index + count + 1 >= sprites.length) count = -1;                         // Keep sprites in bounds.
+
+    inc++ ;
+    if (inc % rate == 0) count++ ;
+
+    if(index + count + 1 >= sprites.length) count = 0;                         // Keep sprites in bounds.
   }
 
   void move() {
    x += vx;
    y += vy;
 
-   // Rebound.
-   vx = (x > width - d || x < 0 + d) ? -vx : vx;
+   vx = (x > width - d || x < 0 + d) ? -vx : vx;                                // Rebound.
    vy = (y > height - d || y < 0 + d) ? -vy : vy;
 
    facing = (vx < 0) ? -1 : 1;                                                  // Orient image w/travel direction.
@@ -154,6 +161,8 @@ class Animation {
       dy = lerpY - y;
       x += dx/ease;                                                             // Apply velocity.
       y += dy/ease;
+      x = constrain(x, 0, width);
+      y = constrain(y, 0, height);
       // animationArray[i].restrain();
     }
   }
