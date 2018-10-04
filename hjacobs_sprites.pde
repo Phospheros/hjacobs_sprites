@@ -89,9 +89,12 @@ void draw() {
 
     //println(animationArray[i].name);
     //println(animationArray[i].index);
-    //println(animationArray[i].inc + "  " + animationArray[i].count);
+    // println(animationArray[0].inc + "  " + animationArray[0].count);
+    // println(animationArray[0].rate);
   }
-   //println(int(frameRate) + " fps");
+  // println(animationArray[0].inc + "  " + animationArray[0].count);
+
+    // println(int(frameRate) + " fps");
 }
 
 /* ======= Class ======= */
@@ -117,11 +120,17 @@ class Animation {
     this.y = y;
   }
 
-int rate = ceil(abs(vx) + abs(vy)) * -1 + floor(abs(vx) + abs(vy));  // Dial this in.
-//int rate = 5;
 int inc = 0;
+// Rate variable controls individual animation frame rate.
+// 1 :: 1 is fastest, 1 :: n > 1 is slower.
+int rate;
 
   void show() {
+
+rate = (field <= r && mousePressed) ? 1 : floor(abs(vx)) * -1 + int(vRange);                       // Rate as function of vx.
+// rate = (mousePressed) ? 1 : floor(abs(vx) + abs(vy)) * -1 + int(vRange + 2);  // Rate as function of vx, vy Manhatten.
+// rate = (mousePressed) ? 1 : floor(dist(0, 0, vx, vy)) * -1 + int(vRange + 2);    // Rate as function of vx, vy Euclidean.
+rate = constrain(rate, 1, rate);
 
     count = (imageList.get(index + count).contains(name)) ? count : 0;
     pushMatrix();
@@ -132,20 +141,20 @@ int inc = 0;
     //println(index + count + 1);
 
     inc++ ;
-    if (inc % rate == 0) count++ ;
-
-    if(index + count + 1 >= sprites.length) count = 0;                         // Keep sprites in bounds.
+    if (inc % rate == 0) count++ ;                                              // Animate per rate setting.
+if (inc % imageList.size() == 0) inc = 0;
+    if(index + count + 1 >= sprites.length) count = 0;                          // Keep sprites in bounds.
   }
 
   void move() {
-   x += vx;
-   y += vy;
+    x += vx;
+    y += vy;
 
-   vx = (x > width - d || x < 0 + d) ? -vx : vx;                                // Rebound.
-   vy = (y > height - d || y < 0 + d) ? -vy : vy;
+    vx = (x > width - d || x < 0 + d) ? -vx : vx;                               // Rebound.
+    vy = (y > height - d || y < 0 + d) ? -vy : vy;
 
-   facing = (vx < 0) ? -1 : 1;                                                  // Orient image w/travel direction.
-   if (x <= 0 || x >= width) facing *= -1;                                      // Rebound orientation.
+    facing = (vx < 0) ? -1 : 1;                                                 // Orient image w/travel direction.
+    if (x <= 0 || x >= width) facing *= -1;                                     // Rebound orientation.
   }
 
   void scatter() {
@@ -163,7 +172,6 @@ int inc = 0;
       y += dy/ease;
       x = constrain(x, 0, width);
       y = constrain(y, 0, height);
-      // animationArray[i].restrain();
     }
   }
 
