@@ -128,6 +128,10 @@ class Animation {
   float field, dx, dy, lerpVal, lerpX, lerpY;                                   // Scatter force field variables.
   float ease = 30;                                                              // Force field. Lower vals. are stronger.
   float r = 300;                                                                // Radius of force field.
+  int inc = 0;                                                                  // Rate variable controls individual animation frame rate...
+  int rate;                                                                     // 1 :: 1 is fastest, 1 :: n > 1 is slower.
+  int resetInc = 0;                                                             // Animation reset counter.
+  int reset = (PApplet.parseInt(random(1000)));                                              // Animation reset probability.
 
   Animation(String name, int index, float x, float y) {
     this.name = name;
@@ -136,17 +140,12 @@ class Animation {
     this.y = y;
   }
 
-int inc = 0;
-// Rate variable controls individual animation frame rate.
-// 1 :: 1 is fastest, 1 :: n > 1 is slower.
-int rate;
-
   public void show() {
 
-rate = (field <= r && mousePressed) ? 1 : floor(abs(vx)) * -1 + PApplet.parseInt(vRange);                       // Rate as function of vx.
-// rate = (mousePressed) ? 1 : floor(abs(vx) + abs(vy)) * -1 + int(vRange + 2);  // Rate as function of vx, vy Manhatten.
-// rate = (mousePressed) ? 1 : floor(dist(0, 0, vx, vy)) * -1 + int(vRange + 2);    // Rate as function of vx, vy Euclidean.
-rate = constrain(rate, 1, rate);
+    rate = (field <= r && mousePressed) ? 1 : floor(abs(vx)) * -1 + PApplet.parseInt(vRange);  // Rate as function of vx.
+    // rate = (mousePressed) ? 1 : floor(abs(vx) + abs(vy)) * -1 + int(vRange + 2);  // Rate as function of vx, vy Manhatten.
+    // rate = (mousePressed) ? 1 : floor(dist(0, 0, vx, vy)) * -1 + int(vRange + 2); // Rate as function of vx, vy Euclidean.
+    rate = constrain(rate, 1, rate);
 
     count = (imageList.get(index + count).contains(name)) ? count : 0;
     pushMatrix();
@@ -158,7 +157,7 @@ rate = constrain(rate, 1, rate);
 
     inc++ ;
     if (inc % rate == 0) count++ ;                                              // Animate per rate setting.
-if (inc % imageList.size() == 0) inc = 0;
+    if (inc % imageList.size() == 0) inc = 0;
     if(index + count + 1 >= sprites.length) count = 0;                          // Keep sprites in bounds.
   }
 
@@ -171,6 +170,15 @@ if (inc % imageList.size() == 0) inc = 0;
 
     facing = (vx < 0) ? -1 : 1;                                                 // Orient image w/travel direction.
     if (x <= 0 || x >= width) facing *= -1;                                     // Rebound orientation.
+
+    resetInc++ ;                                                                // Random delayed Brownian motion.
+    if (resetInc % reset == 0) {
+      vx = random(-vRange, vRange);
+      vy = vx * random(-2, 2);
+      resetInc = 0;
+      reset = (PApplet.parseInt(random(1000)));
+    }
+
   }
 
   public void scatter() {
@@ -188,6 +196,10 @@ if (inc % imageList.size() == 0) inc = 0;
       y += dy/ease;
       x = constrain(x, 0, width);
       y = constrain(y, 0, height);
+
+      facing = (dx < 0) ? -1 : 1;                                               // Orient image w/travel direction.
+      if (x <= 0 || x >= width) facing *= -1;                                   // Rebound orientation.
+
     }
   }
 
@@ -196,6 +208,10 @@ if (inc % imageList.size() == 0) inc = 0;
 /*  =========== Notes =========== /
 
 Projector resolution = 1920 X 1080, throw ~= 132" X 73" @ ~110" distance.
+
+Issues:
+
+Reset occasionally introduces facing fibrillation. Once sprite size is fianllized, fix this by not resetting at edge (presumably).
 
 */
   public void settings() {  size(1000, 1000, P3D); }
