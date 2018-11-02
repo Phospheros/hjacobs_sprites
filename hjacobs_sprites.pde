@@ -1,5 +1,5 @@
 //import java.io.File;
-int count = 1;
+// int count = 1;
 float x, y;
 String name;
 int index;
@@ -57,7 +57,7 @@ void setup() {
   for(int i = 0; i < figuresUnique.length; i++ ) {
     animation.name = figuresUnique[i];
     animation.index = figuresIndex.get(i);
-    animation.x = width/3 + i * 50;
+    animation.x = width/2;
     animation.y = height/2;
     animationArray[i] = new Animation(animation.name, animation.index, animation.x, animation.y);
   }
@@ -67,12 +67,13 @@ void setup() {
   imageMode(CENTER);
   frameRate(30);
   background(255);
-  //println(files.length);
-  //println(imageList.size());
+  // println(files.length);
+  // println(imageList.size());
   // println(animationArray.length);
-  //println(figuresList);
-  //println(figuresUnique);
-  //println(figuresIndex);
+  // println(figuresList);
+  // println(figuresUnique);
+  // println(figuresIndex);
+  // exit();
 }
 
 // ================= Draw ================= //
@@ -94,7 +95,7 @@ void draw() {
   }
   // println(animationArray[0].inc + "  " + animationArray[0].count);
 
-    // println(int(frameRate) + " fps");
+    // println(int(frameRate) + " fps" + " " + frameCount + " frames");
 }
 
 /* ======= Class ======= */
@@ -105,10 +106,10 @@ class Animation {
   float x, y;
   int count;
   int d = 0;                                                                    // Sprite .png is 72 X 72, but lots of background padding.
-  float vRange = 5;                                                             // Velocity & heading variables.
-  float vx = random(-vRange, vRange);
-  float vy = vx * random(-2, 2);
-  int facing;
+  float vRange = 3;                                                             // Velocity & heading variables...
+  float vx = random(-vRange, vRange);                                           // ... setting x velocity, ...
+  float vy = vx * random(-2, 2);                                                // ... and then y as ratio to constrain away from vertical movement.
+  int facing;                                                                   // Image orientation, left or right.
   float field, dx, dy, lerpVal, lerpX, lerpY;                                   // Scatter force field variables.
   float ease = 30;                                                              // Force field. Lower vals. are stronger.
   float r = 300;                                                                // Radius of force field.
@@ -131,10 +132,10 @@ class Animation {
     // rate = (mousePressed) ? 1 : floor(dist(0, 0, vx, vy)) * -1 + int(vRange + 2); // Rate as function of vx, vy Euclidean.
     rate = constrain(rate, 1, rate);
 
-    count = (imageList.get(index + count).contains(name)) ? count : 0;
+    count = (imageList.get(index + count).contains(name)) ? count : 1;
     pushMatrix();
-    scale(facing, 1);
-    image(sprites[index + count + 1], x * facing, y);                           // sprites[], imageList() off by 1.
+    scale(facing, 1);                                                           // Flip image.
+    image(sprites[index + count], x * facing, y);                               // sprites[], imageList() off by 1.
     popMatrix();
     //println(name + "  " + index + "  " + count + "  " + imageList.get(index + count));
     //println(index + count + 1);
@@ -142,17 +143,17 @@ class Animation {
     inc++ ;
     if (inc % rate == 0) count++ ;                                              // Animate per rate setting.
     if (inc % imageList.size() == 0) inc = 0;
-    if(index + count + 1 >= sprites.length) count = 0;                          // Keep sprites in bounds.
+    if(index + count >= sprites.length) count = 0;                              // Keep sprites in bounds.
   }
 
   void move() {
     x += vx;
     y += vy;
 
-    vx = (x > width - d || x < 0 + d) ? -vx : vx;                               // Rebound.
+    vx = (x > width - d || x < 0 + d) ? -vx : vx;                               // Edge rebound.
     vy = (y > height - d || y < 0 + d) ? -vy : vy;
 
-    facing = (vx < 0) ? -1 : 1;                                                 // Orient image w/travel direction.
+    facing = (vx < 0) ? 1 : -1;                                                 // Orient image w/travel direction.
     if (x <= 0 || x >= width) facing *= -1;                                     // Rebound orientation.
 
     resetInc++ ;                                                                // Random delayed Brownian motion.
@@ -160,7 +161,7 @@ class Animation {
       vx = random(-vRange, vRange);
       vy = vx * random(-2, 2);
       resetInc = 0;
-      reset = (int(random(1000)));
+      reset = (int(random(1, 1000)));
     }
 
   }
@@ -181,7 +182,7 @@ class Animation {
       x = constrain(x, 0, width);
       y = constrain(y, 0, height);
 
-      facing = (dx < 0) ? -1 : 1;                                               // Orient image w/travel direction.
+      facing = (dx < 0) ? 1 : -1;                                               // Orient image w/travel direction, scatter specific.
       if (x <= 0 || x >= width) facing *= -1;                                   // Rebound orientation.
 
     }
@@ -196,5 +197,7 @@ Projector resolution = 1920 X 1080, throw ~= 132" X 73" @ ~110" distance.
 Issues:
 
 Reset occasionally introduces facing fibrillation. Once sprite size is fianllized, fix this by not resetting at edge (presumably).
+
+Consider restarting entire sketch periodically.
 
 */
