@@ -1,5 +1,22 @@
-//import java.io.File;
-// int count = 1;
+// Kinect specific vars.
+import org.openkinect.processing.*;
+Kinect kinect;
+PImage kinectImage;
+float scaleKX, scaleKY;                                                         // Scale Kinect native rez to sketch size.
+int kinectIndex;
+float b, z;
+int skip = 10;
+int threshold = 149;
+int[] depth;
+int offset, d;
+float min = 300;                                                                // Note Kinect cannot see values 0, ~300 anyway.
+float max = 882;
+float sumX, sumY, totalPixels, avgX, avgY;
+boolean kinectOn = true;                                                        // Kinect vs mouse scatter toggle.
+
+
+
+// Sketch vars.
 float x, y;
 String name;
 int index;
@@ -51,9 +68,6 @@ void setup() {
 
   String[] figuresUnique = figuresList.getUnique();                             // create array exclusive of duplicates.
 
-
-
-
   animationArray = new Animation[figuresUnique.length];
   for(int i = 0; i < figuresUnique.length; i++ ) {
     animation.name = figuresUnique[i];
@@ -63,11 +77,19 @@ void setup() {
     animationArray[i] = new Animation(animation.name, animation.index, animation.x, animation.y);
   }
 
-
+  // Kinect setup.
+  kinect = new Kinect(this);
+  kinect.enableMirror(true);
+  kinect.initDepth();
+  kinectImage = kinect.getDepthImage();
+  // kinectImage = createImage(kinect.width, kinect.height, RGB);
+  scaleKX = 1.55;                                                               // Target sketch rez / Kinect native rez (trial and error).
+  scaleKY = 2.1;
 
   imageMode(CENTER);
   frameRate(30);
   background(255);
+  noCursor();
   // println(files.length);
   // println(imageList.size());
   // println(animationArray.length);
@@ -79,7 +101,6 @@ void setup() {
 
 // ================= Draw ================= //
 
-
 void draw() {
   background(255);
 
@@ -87,6 +108,7 @@ void draw() {
     animationArray[i].show();
     animationArray[i].move();
     animationArray[i].scatter();
+    animationArray[i].sensor();
 
     //println(animationArray[i].name);
     //println(animationArray[i].index);
@@ -115,7 +137,7 @@ class Animation {
   int inc = 0;                                                                  // Rate variable controls individual animation frame rate...
   int rate;                                                                     // 1 :: 1 is fastest, 1 :: n > 1 is slower.
   int resetInc = 0;                                                             // Animation reset counter.
-  int reset = (int(random(1000)));                                              // Animation reset probability.
+  int reset = (int(random(1, 1000)));                                           // Animation reset probability.
 
   Animation(String name, int index, float x, float y) {
     this.name = name;
@@ -176,14 +198,17 @@ class Animation {
   }
 
   void scatter() {
-    field = dist(mouseX, mouseY, x, y);                                         // Locus / particle distance.
+    field = (kinectOn) ? dist(avgX, avgY, x, y) : dist(mouseX, mouseY, x, y);   // Locus / particle distance.
     lerpVal = r / field;                                                        // Field radius / distance.
-    lerpX = lerp(mouseX, x, lerpVal);                                           // Fractional distance.
-    lerpY = lerp(mouseY, y, lerpVal);
+    lerpX = (kinectOn) ? lerp(avgX, x, lerpVal) : lerp(mouseX, x, lerpVal);     // Fractional distance.
+    lerpY = (kinectOn) ? lerp(avgY, y, lerpVal) : lerp(mouseY, y, lerpVal);
 
-    if (field <= r && mousePressed) {
-      stroke(0, 50);
-      line(x, y, lerpX, lerpY);                                                 // Trajectory display.
+    if (field <= r) {
+      if (!kinectOn) {                                                          // Mouse location & force vector display.
+        fill(0, 0, 200);
+        line(x, y, lerpX, lerpY);
+        ellipse(mouseX, mouseY, 20, 20);
+      }
       dx = lerpX - x;                                                           // Velocity as factor of distance.
       dy = lerpY - y;
       x += dx/ease;                                                             // Apply velocity.
@@ -193,10 +218,41 @@ class Animation {
 
       facing = (dx < 0) ? 1 : -1;                                               // Orient image w/travel direction, scatter specific.
       if (x <= 0 || x >= width) facing *= -1;                                   // Rebound orientation.
-
     }
   }
 
+  void sensor() {
+    sumX = sumY = totalPixels = 0;
+    for(int y = 0; y < kinectImage.height; y += skip) {
+      for(int x = 0; x < kinectImage.width; x += skip) {
+        kinectIndex = x + y * kinectImage.width;
+        b = red(kinectImage.pixels[kinectIndex]);
+        if (b > threshold) {
+          sumX += x * scaleKX;                                                  // Get total XY values in total shown pixels.
+          sumY += y * scaleKY;
+          totalPixels++ ;
+          // Kinect depth calibration display.
+          // strokeWeight(1);
+          // noFill();
+          // stroke(0, map(b, threshold, 255, 0, 3000), 0);
+          // rect(x * scaleKX, y * scaleKY, skip, skip);
+        }
+      }
+    }
+    avgX = sumX / totalPixels;
+    avgY = sumY / totalPixels;
+    // Kinect centroidal (average all pixels) display.
+    stroke(255, 0, 0);
+    fill(255, 0, 0);
+    ellipse(avgX, avgY, 20, 20);
+  }
+
+} // End Animation class.
+
+/*  =========== UI =========== */
+
+void keyPressed() {
+  if (key == 'K' || key == 'k') kinectOn = !kinectOn;
 }
 
 /*  =========== Notes =========== /
