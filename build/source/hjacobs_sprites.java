@@ -31,6 +31,7 @@ float min = 300;                                                                
 float max = 882;
 float sumX, sumY, totalPixels, avgX, avgY;
 boolean kinectOn = true;                                                        // Kinect vs mouse scatter toggle.
+boolean toggleLabel;
 
 
 
@@ -166,7 +167,7 @@ class Animation {
 
   public void show() {
 
-    rate = (field <= r && mousePressed) ? 1 : floor(abs(vx)) * -1 + PApplet.parseInt(vRange);  // Rate as function of vx.
+    rate = (field <= r) ? 1 : floor(abs(vx)) * -1 + PApplet.parseInt(vRange);  // Rate as function of vx.
     // rate = (mousePressed) ? 1 : floor(abs(vx) + abs(vy)) * -1 + int(vRange + 2);  // Rate as function of vx, vy Manhatten.
     // rate = (mousePressed) ? 1 : floor(dist(0, 0, vx, vy)) * -1 + int(vRange + 2); // Rate as function of vx, vy Euclidean.
     rate = constrain(rate, 1, rate);
@@ -189,7 +190,7 @@ class Animation {
     textSize(12);                                                               // Display sprite ID.
     fill(0);
     textAlign(CENTER);
-    text(name, x, y + d + 6);
+    if (toggleLabel) text(name, x, y + d + 6);
 
   }
 
@@ -271,6 +272,7 @@ class Animation {
 
 public void keyPressed() {
   if (key == 'K' || key == 'k') kinectOn = !kinectOn;
+  if (key == 'L' || key == 'l') toggleLabel = !toggleLabel;
 }
 
 /*  =========== Notes =========== /
