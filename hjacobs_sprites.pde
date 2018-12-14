@@ -1,3 +1,5 @@
+// R.A. Robertson 2018, for Hedwige Jacobs :: CC(by)(sa) Creative Commons Attribution, Share Alike.
+
 // Kinect specific vars.
 import org.openkinect.processing.*;
 Kinect kinect;
@@ -6,14 +8,13 @@ float scaleKX, scaleKY;                                                         
 int kinectIndex;
 float b, z;
 int skip = 10;
-int threshold = 149;
+int threshold = 138;                                                            // Lower vals = further from sensor. 138 ~= 8' from sensor.
 int[] depth;
 int offset, d;
 float min = 300;                                                                // Note Kinect cannot see values 0, ~300 anyway.
 float max = 882;
 float sumX, sumY, totalPixels, avgX, avgY;
 boolean kinectOn = true;                                                        // Kinect vs mouse scatter toggle.
-boolean toggleLabel;
 
 
 
@@ -26,11 +27,14 @@ StringList imageList, figuresList, figuresUnique;
 IntList figuresIndex;
 Animation animation = new Animation(name, index, x, y);
 Animation[] animationArray;
+boolean toggleLabel, toggleMarker, toggleImage;                                 // Sprite label, Kinect centroid marker, depth image toggles.
 
 // ================= Setup ================= //
 
 void setup() {
-  size(1000, 1000, P3D);
+  // size(1000, 1000, P3D);                                                     // Square.
+  size(1680, 1004, P3D);                                                        // Dev laptop.
+  // size(1920, 1080, P3D);                                                     // Target projector rez.
 
   java.io.File spritesFolder = new java.io.File(dataPath("Sprites"));           // data/Sprites
   String[] files = spritesFolder.list();                                        // All files (including invisibles).
@@ -80,7 +84,7 @@ void setup() {
 
   // Kinect setup.
   kinect = new Kinect(this);
-  kinect.enableMirror(true);
+  // kinect.enableMirror(true);
   kinect.initDepth();
   kinectImage = kinect.getDepthImage();
   // kinectImage = createImage(kinect.width, kinect.height, RGB);
@@ -149,7 +153,7 @@ class Animation {
 
   void show() {
 
-    rate = (field <= r) ? 1 : floor(abs(vx)) * -1 + int(vRange);  // Rate as function of vx.
+    rate = (field <= r) ? 1 : floor(abs(vx)) * -1 + int(vRange);                // Animation rate as function of vx.
     // rate = (mousePressed) ? 1 : floor(abs(vx) + abs(vy)) * -1 + int(vRange + 2);  // Rate as function of vx, vy Manhatten.
     // rate = (mousePressed) ? 1 : floor(dist(0, 0, vx, vy)) * -1 + int(vRange + 2); // Rate as function of vx, vy Euclidean.
     rate = constrain(rate, 1, rate);
@@ -207,6 +211,7 @@ class Animation {
     if (field <= r) {
       if (!kinectOn) {                                                          // Mouse location & force vector display.
         fill(0, 0, 200);
+        stroke(255, 0, 0);
         line(x, y, lerpX, lerpY);
         ellipse(mouseX, mouseY, 20, 20);
       }
@@ -217,7 +222,7 @@ class Animation {
       x = constrain(x, 0 + d, width - d);
       y = constrain(y, 0 + d, height - d);
 
-      facing = (dx < 0) ? 1 : -1;                                               // Orient image w/travel direction, scatter specific.
+      // facing = (dx < 0) ? 1 : -1;                                               // Orient image w/travel direction, scatter specific.
       if (x <= 0 || x >= width) facing *= -1;                                   // Rebound orientation.
     }
   }
@@ -233,19 +238,24 @@ class Animation {
           sumY += y * scaleKY;
           totalPixels++ ;
           // Kinect depth calibration display.
-          // strokeWeight(1);
-          // noFill();
-          // stroke(0, map(b, threshold, 255, 0, 3000), 0);
-          // rect(x * scaleKX, y * scaleKY, skip, skip);
+            if(toggleImage) {
+            strokeWeight(1);
+            noFill();
+            stroke(0, map(b, threshold, 255, 0, 3000), 0);
+            rect(x * scaleKX, y * scaleKY, skip, skip);
+          }
         }
       }
     }
     avgX = sumX / totalPixels;
     avgY = sumY / totalPixels;
     // Kinect centroidal (average all pixels) display.
-    stroke(255, 0, 0);
-    fill(255, 0, 0);
-    ellipse(avgX, avgY, 20, 20);
+      if(toggleMarker) {
+      stroke(255, 0, 0);
+      fill(255, 0, 0);
+      ellipse(avgX, avgY, 20, 20);
+      // println(avgX + "  " + avgY);
+    }
   }
 
 } // End Animation class.
@@ -255,18 +265,14 @@ class Animation {
 void keyPressed() {
   if (key == 'K' || key == 'k') kinectOn = !kinectOn;
   if (key == 'L' || key == 'l') toggleLabel = !toggleLabel;
+  if (key == 'M' || key == 'm') toggleMarker = !toggleMarker;
+  if (key == 'I' || key == 'i') toggleImage = !toggleImage;
 }
 
 /*  =========== Notes =========== /
 
 Projector resolution = 1920 X 1080, throw ~= 132" X 73" @ ~110" distance.
 
-Remember to turn off cursor display, and scatter lines visuals in production.
-
 Issues:
-
-Reset occasionally introduces facing fibrillation. Once sprite size is finalized, fix this by not resetting at edge (presumably).
-
-Consider restarting entire sketch periodically.
 
 */
