@@ -8,7 +8,7 @@ float scaleKX, scaleKY;                                                         
 int kinectIndex;
 float b, z;
 int skip = 10;
-int threshold = 138;                                                            // Lower vals = further from sensor. 138 ~= 8' from sensor.
+int threshold = 135;                                                            // Lower vals = further from sensor. 138 ~= 8' from sensor.
 int[] depth;
 int offset, d;
 float min = 300;                                                                // Note Kinect cannot see values 0, ~300 anyway.
@@ -32,9 +32,9 @@ boolean toggleLabel, toggleMarker, toggleImage;                                 
 // ================= Setup ================= //
 
 void setup() {
-  // size(1000, 1000, P3D);                                                     // Square.
-  size(1680, 1004, P3D);                                                        // Dev laptop.
-  // size(1920, 1080, P3D);                                                     // Target projector rez.
+  // size(1000, 1000, P3D);                                                        // Square.
+  // size(1680, 1004, P3D);                                                        // Dev laptop.
+  size(1920, 1080, P3D);                                                        // Target projector rez.
 
   java.io.File spritesFolder = new java.io.File(dataPath("Sprites"));           // data/Sprites
   String[] files = spritesFolder.list();                                        // All files (including invisibles).
@@ -88,8 +88,8 @@ void setup() {
   kinect.initDepth();
   kinectImage = kinect.getDepthImage();
   // kinectImage = createImage(kinect.width, kinect.height, RGB);
-  scaleKX = 1.55;                                                               // Target sketch rez / Kinect native rez (trial and error).
-  scaleKY = 2.1;
+  scaleKX = float(width)/640;                                                   // Scale factor size() to Kinect native rez.
+  scaleKY = float(height)/480;                                                  // Hard code vals at 2.625, 2.1 for dev laptop size.
 
   imageMode(CENTER);
   frameRate(30);
@@ -108,6 +108,9 @@ void setup() {
 
 void draw() {
   background(255);
+  // noStroke();                                                                  // Trace.
+  // fill(255, 130);
+  // rect(0, 0, width, height);
 
   for(int i = 0; i < animationArray.length; i++) {
     animationArray[i].show();
@@ -274,5 +277,10 @@ void keyPressed() {
 Projector resolution = 1920 X 1080, throw ~= 132" X 73" @ ~110" distance.
 
 Issues:
+
+noCursor() works on initialization, but if mouse moves at all, cursor appears and persists. Problem not reliably reproducible.
+Also, from reference: "Hides the cursor from view. Will not work when running the program in a web browser or in full screen (Present) mode."
+
+Is there any reason to leave sensor() inside of class? Move outside as its own function?
 
 */
