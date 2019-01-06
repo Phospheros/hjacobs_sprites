@@ -1,25 +1,7 @@
-import processing.core.*; 
-import processing.data.*; 
-import processing.event.*; 
-import processing.opengl.*; 
-
-import org.openkinect.processing.*; 
-
-import java.util.HashMap; 
-import java.util.ArrayList; 
-import java.io.File; 
-import java.io.BufferedReader; 
-import java.io.PrintWriter; 
-import java.io.InputStream; 
-import java.io.OutputStream; 
-import java.io.IOException; 
-
-public class hjacobs_sprites extends PApplet {
-
 // R.A. Robertson 2018, for Hedwige Jacobs :: CC(by)(sa) Creative Commons Attribution, Share Alike.
 
 // Kinect specific vars.
-
+import org.openkinect.processing.*;
 Kinect kinect;
 PImage kinectImage;
 float scaleKX, scaleKY;                                                         // Scale Kinect native rez to sketch size.
@@ -31,7 +13,8 @@ int[] depth;
 int offset, d;
 float min = 300;                                                                // Note Kinect cannot see values 0, ~300 anyway.
 float max = 882;
-float sumX, sumY, totalPixels, avgX, avgY, offX, offY;
+float sumX, sumY, totalPixels, avgX, avgY;
+float offX, offY;
 boolean kinectOn = true;                                                        // Kinect vs mouse scatter toggle.
 
 // Sketch vars.
@@ -47,14 +30,14 @@ boolean toggleLabel, toggleMarker, toggleImage;                                 
 
 // ================= Setup ================= //
 
-public void setup() {
-  // size(1000, 1000, P3D);                                                        // Square.
+void setup() {
+  // size(1000, 1000, P2D);                                                        // Square.
   // size(1680, 1004, P3D);                                                        // Dev laptop.
-                                                          // Target projector rez.
+  size(1920, 1080, P3D);                                                        // Target projector rez.
 
   java.io.File spritesFolder = new java.io.File(dataPath("Sprites"));           // data/Sprites
   String[] files = spritesFolder.list();                                        // All files (including invisibles).
-  files = sort(files);                                                          // Sort files names. (Code fix Egon van der Hoeven.)
+  files = sort(files);
   imageList = new StringList();                                                 // Images array.
   figuresList = new StringList();                                               // Figures list ref. (but not frames).
   figuresIndex = new IntList();
@@ -86,6 +69,7 @@ public void setup() {
 
   for(int i = 0; i < figuresList.size(); i++ ) {
     figuresIndex.appendUnique(figuresList.index(figuresList.get(i)));           // find unique figures index, and
+    // println(i,"  ",figuresList.get(i),"  ",figuresList.index(figuresList.get(i)));
   }
 
   String[] figuresUnique = figuresList.getUnique();                             // create array exclusive of duplicates.
@@ -105,8 +89,8 @@ public void setup() {
   kinect.initDepth();
   kinectImage = kinect.getDepthImage();
   // kinectImage = createImage(kinect.width, kinect.height, RGB);
-  scaleKX = PApplet.parseFloat(width)/640;                                                   // Scale factor size() to Kinect native rez.
-  scaleKY = PApplet.parseFloat(height)/480;                                                  // Hard code vals at 2.625, 2.1 for dev laptop size.
+  scaleKX = float(width)/640;                                                   // Scale factor size() to Kinect native rez. Std 640
+  scaleKY = float(height)/480;                                                  // Hard code vals at 2.625, 2.1 for dev laptop size. Std 480
 
   imageMode(CENTER);
   frameRate(30);
@@ -123,7 +107,7 @@ public void setup() {
 
 // ================= Draw ================= //
 
-public void draw() {
+void draw() {
   background(255);
   // noStroke();                                                                  // Trace.
   // fill(255, 130);
@@ -158,12 +142,12 @@ class Animation {
   float vy = vx * random(-2, 2);                                                // ... and then y as ratio to constrain away from vertical movement.
   int facing;                                                                   // Image orientation, left or right.
   float field, dx, dy, lerpVal, lerpX, lerpY;                                   // Scatter force field variables.
-  float ease = 10;                                                              // Force field. Lower vals. are stronger.
-  float r = 400;                                                                // Radius of force field.
+  float ease = 10;                                                              // Force field. Lower vals. are stronger.  Std 30
+  float r = 400;                                                                // Radius of force field.  Std 400
   int inc = 0;                                                                  // Rate variable controls individual animation frame rate...
   int rate;                                                                     // 1 :: 1 is fastest, 1 :: n > 1 is slower.
   int resetInc = 0;                                                             // Animation reset counter.
-  int reset = (PApplet.parseInt(random(1, 1000)));                                           // Animation reset probability.
+  int reset = (int(random(1, 1000)));                                           // Animation reset probability.
 
   Animation(String name, int index, float x, float y) {
     this.name = name;
@@ -172,9 +156,9 @@ class Animation {
     this.y = y;
   }
 
-  public void show() {
+  void show() {
 
-    rate = (field <= r) ? 1 : floor(abs(vx)) * -1 + PApplet.parseInt(vRange);                // Animation rate as function of vx.
+    rate = (field <= r) ? 1 : floor(abs(vx)) * -1 + int(vRange);                // Animation rate as function of vx.
     // rate = (mousePressed) ? 1 : floor(abs(vx) + abs(vy)) * -1 + int(vRange + 2);  // Rate as function of vx, vy Manhatten.
     // rate = (mousePressed) ? 1 : floor(dist(0, 0, vx, vy)) * -1 + int(vRange + 2); // Rate as function of vx, vy Euclidean.
     rate = constrain(rate, 1, rate);
@@ -201,7 +185,7 @@ class Animation {
 
   }
 
-  public void move() {
+  void move() {
     x += vx;
     y += vy;
 
@@ -218,12 +202,12 @@ class Animation {
       vx = random(-vRange, vRange);
       vy = vx * random(-2, 2);
       resetInc = 0;
-      reset = (PApplet.parseInt(random(1, 100)));
+      reset = (int(random(1, 100)));
     }
 
   }
 
-  public void scatter() {
+  void scatter() {
     field = (kinectOn) ? dist(avgX, avgY, x, y) : dist(mouseX, mouseY, x, y);   // Locus / particle distance.
     lerpVal = r / field;                                                        // Field radius / distance.
     lerpX = (kinectOn) ? lerp(avgX, x, lerpVal) : lerp(mouseX, x, lerpVal);     // Fractional distance.
@@ -254,7 +238,7 @@ class Animation {
 
 /*  =========== Function =========== */
 
-public void sensor() {
+void sensor() {
   if (kinectOn) {
     sumX = sumY = totalPixels = 0;
     for(int y = 0; y < kinectImage.height; y += skip) {
@@ -278,9 +262,9 @@ public void sensor() {
     avgX = sumX / totalPixels;
     avgY = sumY / totalPixels;
 
-    // Calculate offsets (courtesy Egon van der Hoeven).
-    offX = -0.173f * avgX + 233;
-    offY =  0.103f * avgY + 28;
+    // Calculate offsets
+    offX = -0.173 * avgX + 233;
+    offY =  0.103 * avgY + 28;
     avgX += offX;
     avgY += offY;
 
@@ -296,7 +280,7 @@ public void sensor() {
 
 /*  =========== UI =========== */
 
-public void keyPressed() {
+void keyPressed() {
   if (key == 'K' || key == 'k') kinectOn = !kinectOn;
   if (key == 'L' || key == 'l') toggleLabel = !toggleLabel;
   if (key == 'M' || key == 'm') toggleMarker = !toggleMarker;
@@ -313,13 +297,3 @@ noCursor() works on initialization, but if mouse moves at all, cursor appears an
 Also, from reference: "Hides the cursor from view. Will not work when running the program in a web browser or in full screen (Present) mode."
 
 */
-  public void settings() {  size(1920, 1080, P3D); }
-  static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "hjacobs_sprites" };
-    if (passedArgs != null) {
-      PApplet.main(concat(appletArgs, passedArgs));
-    } else {
-      PApplet.main(appletArgs);
-    }
-  }
-}

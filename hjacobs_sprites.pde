@@ -13,10 +13,8 @@ int[] depth;
 int offset, d;
 float min = 300;                                                                // Note Kinect cannot see values 0, ~300 anyway.
 float max = 882;
-float sumX, sumY, totalPixels, avgX, avgY;
+float sumX, sumY, totalPixels, avgX, avgY, offX, offY;
 boolean kinectOn = true;                                                        // Kinect vs mouse scatter toggle.
-
-
 
 // Sketch vars.
 float x, y;
@@ -38,6 +36,7 @@ void setup() {
 
   java.io.File spritesFolder = new java.io.File(dataPath("Sprites"));           // data/Sprites
   String[] files = spritesFolder.list();                                        // All files (including invisibles).
+  files = sort(files);                                                          // Sort files names. (Code fix Egon van der Hoeven.)
   imageList = new StringList();                                                 // Images array.
   figuresList = new StringList();                                               // Figures list ref. (but not frames).
   figuresIndex = new IntList();
@@ -116,7 +115,8 @@ void draw() {
     animationArray[i].show();
     animationArray[i].move();
     animationArray[i].scatter();
-    animationArray[i].sensor();
+    sensor();
+    // animationArray[i].sensor();
 
     //println(animationArray[i].name);
     //println(animationArray[i].index);
@@ -140,7 +140,7 @@ class Animation {
   float vy = vx * random(-2, 2);                                                // ... and then y as ratio to constrain away from vertical movement.
   int facing;                                                                   // Image orientation, left or right.
   float field, dx, dy, lerpVal, lerpX, lerpY;                                   // Scatter force field variables.
-  float ease = 30;                                                              // Force field. Lower vals. are stronger.
+  float ease = 10;                                                              // Force field. Lower vals. are stronger.
   float r = 400;                                                                // Radius of force field.
   int inc = 0;                                                                  // Rate variable controls individual animation frame rate...
   int rate;                                                                     // 1 :: 1 is fastest, 1 :: n > 1 is slower.
@@ -230,14 +230,21 @@ class Animation {
     }
   }
 
-  void sensor() {
+
+
+} // End Animation class.
+
+/*  =========== Function =========== */
+
+void sensor() {
+  if (kinectOn) {
     sumX = sumY = totalPixels = 0;
     for(int y = 0; y < kinectImage.height; y += skip) {
       for(int x = 0; x < kinectImage.width; x += skip) {
         kinectIndex = x + y * kinectImage.width;
         b = red(kinectImage.pixels[kinectIndex]);
         if (b > threshold) {
-          sumX += x * scaleKX;                                                  // Get total XY values in total shown pixels.
+          sumX += x * scaleKX;                                                    // Get total XY values in total shown pixels.
           sumY += y * scaleKY;
           totalPixels++ ;
           // Kinect depth calibration display.
@@ -252,6 +259,13 @@ class Animation {
     }
     avgX = sumX / totalPixels;
     avgY = sumY / totalPixels;
+
+    // Calculate offsets (courtesy Egon van der Hoeven).
+    offX = -0.173 * avgX + 233;
+    offY =  0.103 * avgY + 28;
+    avgX += offX;
+    avgY += offY;
+
     // Kinect centroidal (average all pixels) display.
       if(toggleMarker) {
       stroke(255, 0, 0);
@@ -260,8 +274,7 @@ class Animation {
       // println(avgX + "  " + avgY);
     }
   }
-
-} // End Animation class.
+}
 
 /*  =========== UI =========== */
 
@@ -280,7 +293,5 @@ Issues:
 
 noCursor() works on initialization, but if mouse moves at all, cursor appears and persists. Problem not reliably reproducible.
 Also, from reference: "Hides the cursor from view. Will not work when running the program in a web browser or in full screen (Present) mode."
-
-Is there any reason to leave sensor() inside of class? Move outside as its own function?
 
 */
