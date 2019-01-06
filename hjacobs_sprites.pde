@@ -1,25 +1,22 @@
-// R.A. Robertson 2018, for Hedwige Jacobs :: CC(by)(sa) Creative Commons Attribution, Share Alike.
+// R.A. Robertson 2018 -19, for Hedwige Jacobs :: CC(by)(sa) Creative Commons Attribution, Share Alike.
+// Kinect library and example code, Shiffman et al.
 
 // Kinect specific vars.
 import org.openkinect.processing.*;
 Kinect kinect;
 PImage kinectImage;
 float scaleKX, scaleKY;                                                         // Scale Kinect native rez to sketch size.
-int kinectIndex;
-float b, z;
-int skip = 10;
+int kinectIndex;                                                                // Kinect pixel array index value.
+float b;                                                                        // Color (formerly brightness) of depth.
+int skip = 10;                                                                  // Sets rez for Kinect reference image.
 int threshold = 135;                                                            // Lower vals = further from sensor. 138 ~= 8' from sensor.
-int[] depth;
-int offset, d;
-float min = 300;                                                                // Note Kinect cannot see values 0, ~300 anyway.
-float max = 882;
-float sumX, sumY, totalPixels, avgX, avgY, offX, offY;
+float sumX, sumY, totalPixels, avgX, avgY, offX, offY;                          // Pixel averaging and offsets.
 boolean kinectOn = true;                                                        // Kinect vs mouse scatter toggle.
 
 // Sketch vars.
 float x, y;
-String name;
-int index;
+String name;                                                                    // Sprite .png filename.
+int index;                                                                      // Sprite arrray reference.
 PImage[] sprites;
 StringList imageList, figuresList, figuresUnique;
 IntList figuresIndex;
@@ -88,7 +85,7 @@ void setup() {
   kinectImage = kinect.getDepthImage();
   // kinectImage = createImage(kinect.width, kinect.height, RGB);
   scaleKX = float(width)/640;                                                   // Scale factor size() to Kinect native rez.
-  scaleKY = float(height)/480;                                                  // Hard code vals at 2.625, 2.1 for dev laptop size.
+  scaleKY = float(height)/480;
 
   imageMode(CENTER);
   frameRate(30);
@@ -133,7 +130,7 @@ class Animation {
   String name;
   int index;
   float x, y;
-  int count;
+  int count;                                                                    // Index stepper.
   int d = 75 / 2;                                                               // Sprite .png is 75 X 75, but lots of background padding.
   float vRange = 3;                                                             // Velocity & heading variables...
   float vx = random(-vRange, vRange);                                           // ... setting x velocity, ...
@@ -244,7 +241,7 @@ void sensor() {
         kinectIndex = x + y * kinectImage.width;
         b = red(kinectImage.pixels[kinectIndex]);
         if (b > threshold) {
-          sumX += x * scaleKX;                                                    // Get total XY values in total shown pixels.
+          sumX += x * scaleKX;                                                  // Get total XY values in total shown pixels.
           sumY += y * scaleKY;
           totalPixels++ ;
           // Kinect depth calibration display.
@@ -289,9 +286,17 @@ void keyPressed() {
 
 Projector resolution = 1920 X 1080, throw ~= 132" X 73" @ ~110" distance.
 
-Issues:
+Known Issues:
 
 noCursor() works on initialization, but if mouse moves at all, cursor appears and persists. Problem not reliably reproducible.
 Also, from reference: "Hides the cursor from view. Will not work when running the program in a web browser or in full screen (Present) mode."
+
+Key parameter variables to play with:
+
+threshold -- Set max distance for sensor.
+vRange, vx, vy -- Velocity settings for sprites.
+ease, r -- Forcefield parameters.
+rate -- Individual sprite animation rate.
+reset -- Randomize xy velocities intermittently.
 
 */
