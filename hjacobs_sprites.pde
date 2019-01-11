@@ -1,4 +1,5 @@
 // R.A. Robertson 2018 -19, for Hedwige Jacobs :: CC(by)(sa) Creative Commons Attribution, Share Alike.
+// Sprite animations exclusive copyright Hedwige Jacobs.
 // Kinect library and example code, Shiffman et al.
 
 // Kinect specific vars.
