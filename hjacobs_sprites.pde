@@ -1,6 +1,6 @@
 // R.A. Robertson 2018 -19, for Hedwige Jacobs :: CC(by)(sa) Creative Commons Attribution, Share Alike.
 // Sprite animations exclusive copyright Hedwige Jacobs.
-// Kinect library and example code, Shiffman et al.
+// Kinect library and example code, Shiffman et al. Project shadowing and reality checks, Shelby Wilson.
 
 // Kinect specific vars.
 import org.openkinect.processing.*;
